@@ -1,0 +1,133 @@
+---
+title: "GLM for replicate"
+output: html_document
+date: "2023-03-23"
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyverse)
+library(broom)
+```
+
+```{r}
+for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab.csv")
+for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab_RA.csv")
+```
+
+```{r}
+table(for_colab_RA$mut)
+table(for_colab_AM$mut)
+table(for_colab_RA$pos)
+table(for_colab_AM$pos)
+table(for_colab_RA$aa)
+table(for_colab_AM$aa)
+```
+
+#### *AM does not have D147E mutation but RA does.*
+
+
+```{r}
+df_AM <-filter(for_colab_AM[2:428,],library!=0)
+
+df_RA  <-filter(for_colab_RA[2:429,],library!=0)
+df_RA$B1 <- (df_RA$B1_1 + df_RA$B1_2 )/2
+df_RA$B2 <- (df_RA$B2_1 + df_RA$B2_2 )/2
+
+df_RA = subset(df_RA, select = -c(B1_1,B1_2, B2_1, B2_2) )
+
+df <- rbind(df_RA, df_AM)
+df$pos <- as.character(df$pos)
+df
+```
+
+
+
+# GLM for B1 > B2
+```{r}
+df$B1norm <- df$B1 / df$library
+df$B2norm <- df$B2 / df$library
+df$changeB2_B1 <- df$B2norm - df$B1norm
+```
+
+```{r}
+df$B2B1 <- ifelse(df$changeB2_B1 < 0, 1, 0)  # 1 if B1>B2
+```
+
+
+#### *p value is all high with 'binomial' but looks good with 'gaussian'*
+## Binomial
+```{r}
+bin_model <- glm( B2B1 ~ pos * mut , data = df, family = 'binomial') 
+options(max.print=10000)    #set limit to print the output
+summary(bin_model)
+```
+
+## Gaussian
+```{r}
+gauss_model <- glm( changeB2_B1 ~ pos * mut , data = df, family = 'gaussian') 
+summary(gauss_model)
+```
+ 
+"Coefficients: (57 not defined because of singularities)" indicates that 57 of the covariates are a linear combination of some other of the covariates. In other words, it is because of singularity means that the variables are not linearly independent. If you remove the NA variables in the above summary, you will obtain the same result for the rest of the variables. This is because the information given by those variables is already contained in the other variables and thus redundant.
+
+
+```{r}
+fea <- names(coef(gauss_model))[44:length(names(coef(gauss_model)))]      #get features' names
+
+#split the features' names (e.g from "pos137:mutA" to "137" and "A")
+mut <- list()
+pos <- list ()
+for (i in fea){
+              str_split <- strsplit(i, ":")
+              pos <- append(pos, substr(str_split[[1]][1], 4,6))    # e.g extract 137
+              mut <- append(mut, substr(str_split[[1]][2], 4,4))    # e.g extract A
+}
+
+est <- coef(gauss_model)[-1][43:length(coef(gauss_model)[-1])]          #get estimated contribution 
+#p <- coef(summary(gauss_model))[-1,4]         #get p-value
+p <- tidy(gauss_model)$p.value[44:483]        #to extract all including NA value
+```
+
+
+##### *white box is NA values. *
+```{r}
+#create data frame of pos, mut, estimated contribution
+data<- do.call(rbind, Map(data.frame, Pos=pos, Mut=mut, Est = est, p_value =p))
+
+#plot est. con. vs fea
+ggplot(data, aes(x = Pos, y = Mut)) +
+  geom_tile(aes(fill = est)) + 
+  geom_text(aes(label = round(p_value,2)), size = 2)+
+  scale_fill_gradient2(midpoint= 0, na.value = 'white',high = 'dark green', low = 'red', mid ='light yellow')+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 75, hjust=1), plot.subtitle = element_text(size = 10, color = "red", face = "bold"))+
+  labs(y = "Mutation", x = "Position", fill= 'Estimated
+Contribution', subtitle = 'Numbers on square box represent the p-value')
+  #geom_text(x = 5, y = 5, label = 'Numbers on box represent the p-value', color = "black", size = 4)
+```
+```{r}
+#create data frame of pos, mut, estimated contribution
+data<- do.call(rbind, Map(data.frame, Pos=pos, Mut=mut, Est = est, p_value =p))
+data$alpha <- ifelse(data$p_value<0.001,'***', ifelse(data$p_value<0.01,'**', ifelse(data$p_value<0.05,'*', ifelse(data$p_value<0.1,'.', ' '))))
+
+#plot est. con. vs fea
+ggplot(data, aes(x = Pos, y = Mut)) +
+  geom_tile(aes(fill = est)) + 
+  geom_text(aes(label = alpha), size = 3)+
+  scale_fill_gradient2(midpoint= 0, na.value = 'white',high = 'darkgoldenrod1 ', low = 'cyan4', mid ='aliceblue')+ 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 75, hjust=1), plot.subtitle = element_text(size = 10, color = "red", face = "bold"))+
+  labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated
+Contribution', subtitle = 'Significat level codes: 0.001   ***
+                                        0.01    ** 
+                                        0.05    *
+                                        0.1     . ')
+```
+
+https://academic.oup.com/nar/article/42/14/e112/1266940?login=true -> calculate delta mut
+
+do mut then pick AA
+
