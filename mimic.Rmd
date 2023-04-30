@@ -1,0 +1,77 @@
+---
+title: "mimic tissue experiment included in honors thesis"
+output: html_document
+date: "2023-04-29"
+---
+
+```{r}
+library(ggplot2)
+library(readr)
+library(tidyverse)
+library(dplyr)
+```
+
+## %transmitted for each NanoBiT conjugates
+
+```{r}
+# Read data 
+data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/ham%20vs%20no%20ham%20RLU.csv')
+```
+
+```{r}
+# Gather the data into a long format
+#then calculate the ratio of Ham = Yes to Ham = No for each sample and each trial
+pertrans <- data %>%
+  pivot_longer(cols = starts_with("Trial"), names_to = "Trial", values_to = "Value") %>%
+  group_by(Sample, Trial) %>%
+  summarize(Ratio = sum(Value[Ham == "yes"]) / sum(Value[Ham == "no"])) 
+
+#plot
+ggplot(pertrans, aes(x = Sample, y = Ratio*100, color = Sample)) +
+  geom_jitter(width = 0.1, height = 0, alpha = 1, size = 4) +
+  stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size=0.3,width=0.5, geom = "crossbar")+
+  labs(x = "Sample", y = "%Transmitted", color = "Sample") +
+  ylim(0,13)+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 5)) +
+  guides(color = FALSE)+
+  scale_color_manual(values =mau)+
+  theme_classic() + theme(text = element_text(size = 15))
+```
+
+#RLU
+```{r}
+data['Trial1'] <- log10(data['Trial1'])
+data['Trial2'] <- log10(data['Trial2'])
+data['Trial3'] <- log10(data['Trial3'])
+
+means <- data %>%
+  group_by(Sample,Ham) %>%
+  summarize(mean_value = mean(c(Trial1, Trial2, Trial3), na.rm = TRUE),
+            std_error = sd(c(Trial1, Trial2, Trial3), na.rm = TRUE))
+```
+
+```{r}
+ggplot(means, aes(x = Sample, y = mean_value, fill = Ham)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black", width = 0.5) +
+  geom_errorbar(aes(ymin = mean_value - std_error, ymax = mean_value + std_error), position = position_dodge(width = 0.9), width = 0.1) +
+  xlab("Sample") +
+  ylab("RLU") +
+  labs(fill = "Mimic tissue")+
+  scale_fill_manual(values = c("darkslategray3", "azure3")) +
+  theme_classic()
+```
+
+```{r}
+long <- data %>%
+  pivot_longer(cols = starts_with("Trial"), names_to = "Trial", values_to = "RLU")
+  
+ggplot(long, aes(x = Sample, y = log10(RLU), col = Ham)) +
+  geom_jitter(width = 0.1, height = 0, alpha = 1, size = 4) +
+  stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size=0.3,width=0.5, geom = "crossbar")+
+  theme_classic()
+```
+
+
+
+```{r}
+```
