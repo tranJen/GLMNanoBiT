@@ -17,17 +17,7 @@ for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/mai
 for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab_RA.csv")
 ```
 
-```{r}
-table(for_colab_RA$mut)
-table(for_colab_AM$mut)
-table(for_colab_RA$pos)
-table(for_colab_AM$pos)
-table(for_colab_RA$aa)
-table(for_colab_AM$aa)
-```
-
 #### *AM does not have D147E mutation but RA does.*
-
 
 ```{r}
 df_AM <-filter(for_colab_AM[2:428,],library!=0)
@@ -43,8 +33,6 @@ df$pos <- as.character(df$pos)
 df
 ```
 
-
-
 # GLM for B1 > B2
 ```{r}
 df$B1norm <- df$B1 / df$library
@@ -56,12 +44,14 @@ df$changeB2_B1 <- df$B2norm - df$B1norm
 ## Gaussian
 ```{r}
 gauss_model <- glm( changeB2_B1 ~ pos * mut , data = df, family = 'gaussian') 
-options(max.print=10000)    #set limit to print the output
+#options(max.print=10000)    #set limit to print the output
 summary(gauss_model)
+
+#The log-likelihood is a measure of the log-probability of the observed data given the model parameters. Higher values of the log-likelihood indicate that the model is a better fit for the data.
+logLik(gauss_model)
 ```
  
 "Coefficients: (57 not defined because of singularities)" indicates that 57 of the covariates are a linear combination of some other of the covariates. In other words, it is because of singularity means that the variables are not linearly independent. If you remove the NA variables in the above summary, you will obtain the same result for the rest of the variables. This is because the information given by those variables is already contained in the other variables and thus redundant.
-
 
 ```{r}
 fea <- names(coef(gauss_model))[44:length(names(coef(gauss_model)))]      #get features' names
@@ -79,7 +69,6 @@ est <- coef(gauss_model)[-1][43:length(coef(gauss_model)[-1])]          #get est
 #p <- coef(summary(gauss_model))[-1,4]         #get p-value
 p <- tidy(gauss_model)$p.value[44:483]        #to extract all including NA value
 ```
-
 
 ##### *white box is NA values. *
 
@@ -109,37 +98,24 @@ data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 14
 ```
 
 ```{r}
-#plot estimated contribution vs features
-ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
-  geom_tile(aes(fill = Est), width = 0.3, height = 1) + 
-  geom_text(aes(label = alpha), size = 3)+
-  scale_fill_gradient2(midpoint= 0, na.value = 'white',high = 'darkgoldenrod1 ', low = 'cyan4', mid ='aliceblue')+ 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 75, hjust=1), plot.subtitle = element_text(size = 10, color = "red", face = "bold"), aspect.ratio = 3/2)+
-  labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated
-Contribution', subtitle = 'Significat level codes: 0.001   ***
-                                        0.01    ** 
-                                        0.05    *
-                                        0.1     . ')
-```
-
-```{r}
-ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
+heatmap <- ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   geom_tile(aes(fill = Est), width = 1, height = 1) +
   geom_text(aes(label = alpha), size = 3) +
   scale_fill_gradient2(midpoint= 0, na.value = 'white', high = 'darkgoldenrod1', low = 'cyan4', mid ='aliceblue') + 
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 75, hjust = 1), 
+  theme(text =element_text(size = 10),
+        # axis.text.x = element_text(angle = 75, hjust = 1), 
         plot.subtitle = element_text(size = 10, color = "red", face = "bold"), 
         aspect.ratio = 3/2,
         # legend.text = element_text(angle = 0, vjust = 1, hjust = 0.5),
         legend.title = element_text(angle = 90, vjust = 0.5, hjust = 0.5, size = 10),
-        legend.position =  c(1.15,0.5)) +
+        legend.position =  c(1.2,0.5)) +
   guides(fill = guide_colorbar(title.position = "left", title.hjust = 0.5, label.position = "left"))+
   theme(legend.key.width = unit(0.25, "cm"))+
   labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated Contribution', subtitle = 'Significat level codes: 0.001   ***
                                         0.01    ** 
                                         0.05    *
                                         0.1     . ')
+ggsave("heatmap.png", heatmap, width = 6, height = 5, units = "in")
 ```
 

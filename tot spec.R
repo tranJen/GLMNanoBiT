@@ -14,9 +14,9 @@ spectra <- ggplot(totGroup, aes(x = Wavelength, y = RLU, colour = Sample)) +
   xlab("Wavelength (nm)") + xlim(350, 600)+
   theme_classic() +
   theme(text = element_text(size = 20)) +
-  geom_text(aes(x = 450, y = 1.05, label = "450 nm"), size = 5, col = "cornflowerblue", fontface = 'bold') +
+  geom_text(aes(x = 440, y = 1.05, label = "450 nm"), size = 5, col = "cornflowerblue", fontface = 'bold') +
   geom_text(aes(x = 490, y = 1.05, label = "490 nm"), size = 5, col = "cyan3", fontface = 'bold') +
-  geom_text(aes(x = 530, y = 1.05, label = "520 nm"), size = 5, col = "darkseagreen", fontface = 'bold') +
+  geom_text(aes(x = 540, y = 1.05, label = "520 nm"), size = 5, col = "darkseagreen", fontface = 'bold') +
   geom_text(aes(x = 590, y = 1.05, label = "580 nm"), size = 5, col = "darkgoldenrod1", fontface = 'bold')
 
 #save data 
