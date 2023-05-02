@@ -1,7 +1,10 @@
 ---
-title: "mimic tissue experiment included in honors thesis"
-output: html_document
-date: "2023-04-29"
+title: "mimic tissue experiment"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: united
 ---
 
 ```{r}
@@ -11,75 +14,65 @@ library(tidyverse)
 library(dplyr)
 ```
 
-## %transmitted for each NanoBiT conjugates
 
-```{r}
+
+## Experiment
+```{r, warning=FALSE}
 # Read data 
-data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/ham%20vs%20no%20ham%20RLU.csv')
+data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/mimic%20exp/ham%20vs%20no%20ham%20RLU.csv')
+data
 ```
-
-```{r}
+## %transmitted for each NanoBiT conjugates
+```{r, warning=FALSE}
 # Gather the data into a long format and calculate the ratio of Ham = Yes to Ham = No for each sample and each trial
 pertrans <- data %>%
   pivot_longer(cols = starts_with("Trial"), names_to = "Trial", values_to = "Value") %>%
-  group_by(Sample, Trial) %>%
-  summarize(Ratio = sum(Value[Ham == "yes"]) / sum(Value[Ham == "no"]))
+  group_by(sample, Trial) %>%
+  summarize(Ratio = sum(Value[Ham == "yes"]) / sum(Value[Ham == "no"]), .groups = "drop")
+
 
 # Create the plot
-mimicjit <- ggplot(pertrans, aes(x = Sample, y = Ratio*100, color = Sample)) +
+mimicjit <- ggplot(pertrans, aes(x = sample, y = Ratio*100, color = sample)) +
   geom_jitter(width = 0.1, height = 0, alpha = 1, size = 4) +
   stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size=0.3,width=0.5, geom = "crossbar")+
-  labs(x = "Sample", y = "%Transmitted", color = "Sample") +
+  labs(x = "Sample", y = "% transmitted through tissue") +
   ylim(0,11)+
   scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 5)) +
   guides(color = FALSE)+
-  scale_color_manual(values = mau)+
+  scale_color_manual(values = c("cornflowerblue","cyan3","darkseagreen","darkgoldenrod1"))+
   theme_classic() +
   theme(text = element_text(size = 15)) +
   coord_fixed(ratio=4/12)
-
+mimicjit
 # Save the plot
 ggsave("mimic_jitter.png", mimicjit, width = 5, height = 5, units = "in")
 
 ```
 
-#RLU
-```{r}
-# Take the log base 10 of each Trial column
-data[, c("Trial1", "Trial2", "Trial3")] <- log10(data[, c("Trial1", "Trial2", "Trial3")])
-```
+## RLU
 
-```{r}
-# Calculate means and standard errors by Sample and Ham
-means <- data %>%
-  group_by(Sample, Ham) %>%
-  summarize(mean_value = mean(c(Trial1, Trial2, Trial3), na.rm = TRUE),
-            std_error = sd(c(Trial1, Trial2, Trial3), na.rm = TRUE))
+```{r, warning=FALSE}
+long <- data %>%pivot_longer(cols = starts_with("Trial"), names_to = "Trial", values_to = "RLU") %>%
+  mutate(RLU = ifelse(grepl("Trial", Trial), log10(RLU), RLU))
+  
 
-# Create the bar plot
-mimic_bar <- ggplot(means, aes(x = Sample, y = mean_value, fill = Ham)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
-  geom_errorbar(aes(ymin = mean_value - std_error, ymax = mean_value + std_error), position = position_dodge(width = 0.8), width = 0.25) +
+mimic_bar <- ggplot(long, aes(sample,RLU,fill = Ham)) +
+  geom_bar(position = 'dodge', stat = 'summary', fun = "mean") +
+  geom_errorbar(stat = 'summary', fun.data = "mean_se", position = position_dodge(width = 0.8), width = 0.5) +
+  geom_point(aes(x = sample), size = 2, 
+             position = position_jitterdodge(jitter.width = 0, jitter.height=0.4, dodge.width=0.89))+
   xlab("Sample") +
   ylab("log[RLU]") +
   labs(fill = "Mimic tissue") +
   scale_fill_manual(values = c("darkslategray3", "azure3")) +
-  theme_classic()+
-  theme(axis.title = element_text(size = 18),axis.text.x = element_text(size = 12),
+  theme_classic() +
+  theme(axis.title = element_text(size = 18), 
+        axis.text.x = element_text(size = 12), 
         legend.title = element_text(size = 16))
 
+mimic_bar
 # Save the plot
 ggsave("mimic_bar.png", mimic_bar, width = 8, height = 6, units = "in")
-  
+
 ```
 
-```{r}
-#jitter for RLU
-long <- data %>%
-  pivot_longer(cols = starts_with("Trial"), names_to = "Trial", values_to = "RLU")
-  
-ggplot(long, aes(x = Sample, y = log10(RLU), col = Ham)) +
-  geom_jitter(width = 0.1, height = 0, alpha = 1, size = 4) +
-  stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size=0.3,width=0.5, geom = "crossbar")+
-  theme_classic()
-```

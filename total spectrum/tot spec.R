@@ -3,7 +3,7 @@ library(ggplot2)
 library(tidyverse)
 library(readr)
 
-total_spec <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/totspec_normalizedAver.csv")
+total_spec <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/total%20spectrum/totspec_normalizedAver.csv")
 
 totGroup <- total_spec %>% pivot_longer(cols = starts_with("NanoBiT"), names_to = "Sample", values_to = "RLU")
 

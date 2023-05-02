@@ -13,8 +13,8 @@ library(broom)
 ```
 
 ```{r}
-for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab.csv")
-for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab_RA.csv")
+for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/Data_Akrong.csv")
+for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/Data_McGahan.csv")
 ```
 
 #### *AM does not have D147E mutation but RA does.*
@@ -25,8 +25,7 @@ df_AM <-filter(for_colab_AM[2:428,],library!=0)
 df_RA  <-filter(for_colab_RA[2:429,],library!=0)
 df_RA$B1 <- (df_RA$B1_1 + df_RA$B1_2 )/2
 df_RA$B2 <- (df_RA$B2_1 + df_RA$B2_2 )/2
-
-df_RA = subset(df_RA, select = -c(B1_1,B1_2, B2_1, B2_2) )
+df_RA <- subset(df_RA, select = -c(B1_1,B1_2, B2_1, B2_2) )
 
 df <- rbind(df_RA, df_AM)
 df$pos <- as.character(df$pos)
@@ -87,10 +86,8 @@ ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 75, hjust=1), plot.subtitle = element_text(size = 10, color = "red", face = "bold"))+
   labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated
-Contribution', subtitle = 'Significat level codes: 0.001   ***
-                                        0.01    ** 
-                                        0.05    *
-                                        0.1     . ')
+Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1')
+
 ```
 ### Remove unsignificant 
 ```{r}
