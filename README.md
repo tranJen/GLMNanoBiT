@@ -1,9 +1,13 @@
-# GLM_Rabi
+## Where to find data?
+#### Navigate each folder with experiment name to find the raw data and coding scripts for plot
 
-# The GLM model:
+  - Emission Spectrum
+  - Testing permeability through micmic tissue 
+  - Generalized Linear Model (GLM), including the model and testing 'hits' 
+
+## The GLM:
 #### *glm(formula = response_var ~ predictor, data= , family= )*
-
-### To analyze the output of model:
+#### To analyze the output of model:
   - The coefficient estimate in the output indicate the average change in the log odds of the response variable associated with a one unit increase in each predictor variable. 
 
   - The standard error give us an idea of the variability associated with the coefficient estimate. 
@@ -17,7 +21,7 @@ Depending on our preference of significant level, the predictor is whether stati
   
   - The number of Fisher Scoring iterations: indicates how many times the algorithm was run to estimate the parameters of the model. More iterations may be required for complex models or when the convergence criteria are set to be more stringent.
 
-### To choose family function when fitting glm in R
+#### To choose family function when fitting glm in R
 
   - Gaussian family : for continuous decimal data with normal distribution.
   - Poisson or quasi-poisson family: for positive integer or small natural number like count, individual number, frequency.
