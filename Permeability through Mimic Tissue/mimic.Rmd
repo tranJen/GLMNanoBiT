@@ -19,7 +19,7 @@ library(dplyr)
 ## Experiment
 ```{r, warning=FALSE}
 # Read data 
-data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/mimic%20exp/ham%20vs%20no%20ham%20RLU.csv')
+data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/Permeability%20through%20Mimic%20Tissue/ham%20vs%20no%20ham%20RLU.csv')
 data
 ```
 ## %transmitted for each NanoBiT conjugates

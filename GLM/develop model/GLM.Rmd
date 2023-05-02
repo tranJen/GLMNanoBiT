@@ -13,8 +13,8 @@ library(broom)
 ```
 
 ```{r}
-for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/Data_Akrong.csv")
-for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/Data_McGahan.csv")
+for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/develop%20model/Data_Akrong.csv")
+for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/develop%20model/Data_McGahan.csv")
 ```
 
 #### *AM does not have D147E mutation but RA does.*
@@ -74,7 +74,7 @@ p <- tidy(gauss_model)$p.value[44:483]        #to extract all including NA value
 ```{r}
 #create data frame of pos, mut, estimated contribution, alpha
 data_for_plot<- do.call(rbind, Map(data.frame, Pos=pos, Mut=mut, Est = est, p_value =p))
-data_for_plot$alpha <- ifelse(data_for_plot$p_value<0.001,'***', ifelse(data_for_plot$p_value<0.01,'**', ifelse(data_for_plot$p_value<0.05,'*', ifelse(data_for_plot$p_value<0.1,'.', ' '))))
+data_for_plot$alpha <- ifelse(data_for_plot$p_value<0.001,'***', ifelse(0.001 <data_for_plot$p_value & data_for_plot$p_value<0.01,'**', ifelse(0.01<data_for_plot$p_value& data_for_plot$p_value<0.05,'*', ifelse(0.05<data_for_plot$p_value& data_for_plot$p_value<0.1,'.', ' '))))
 ```
 
 ```{r}
