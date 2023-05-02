@@ -109,10 +109,8 @@ heatmap <- ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
         legend.position =  c(1.2,0.5)) +
   guides(fill = guide_colorbar(title.position = "left", title.hjust = 0.5, label.position = "left"))+
   theme(legend.key.width = unit(0.25, "cm"))+
-  labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated Contribution', subtitle = 'Significat level codes: 0.001   ***
-                                        0.01    ** 
-                                        0.05    *
-                                        0.1     . ')
+  labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1')
+heatmap
 ggsave("heatmap.png", heatmap, width = 6, height = 5, units = "in")
 ```
 
