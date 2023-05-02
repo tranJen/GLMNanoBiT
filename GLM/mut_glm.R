@@ -5,7 +5,7 @@ library(readr)
 library(tidyverse)
 
 # Load the data
-data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/mutation_glm.csv')
+data <- read_csv('https://raw.githubusercontent.com/tranJen/GLMNanoBiT_Honors_Thesis/main/GLM/mutation_glm.csv')
 
 # Reshape data from wide to long format
 data_long <- pivot_longer(data, cols = starts_with("CyanToYellow"), 
@@ -22,6 +22,10 @@ lgB_mean <- mean(data_long$ratio[data_long$Mutation == "LgBiT"], na.rm = TRUE)
 
 # Create a jitter plot with custom color palette
 ctoy <- ggplot(data_long, aes(x = Mutation, y = ratio)) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = lgB_mean, ymax = Inf),
+            fill = "cyan4", alpha = 0.055, color = NA) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = lgB_mean),
+            fill = "darkgoldenrod1", alpha = 0.04, color = NA) +
   geom_jitter(width = 0.1, height = 0, color = 'black', alpha = 1, size = 3) +
   stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax = "mean",
                size = 0.3, width = 0.5, geom = "crossbar") +
@@ -32,13 +36,9 @@ ctoy <- ggplot(data_long, aes(x = Mutation, y = ratio)) +
   theme_classic() +
   theme(text = element_text(size = 15), axis.text.x = element_text(size = 15))+
   geom_hline(yintercept = lgB_mean, color = "black", linetype = "dashed") +
-  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = lgB_mean, ymax = Inf),
-            fill = "cyan4", alpha = 0.055, color = NA) +
-  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = lgB_mean),
-            fill = "darkgoldenrod1", alpha = 0.04, color = NA) +
   geom_text(aes(x = 4, y = lgB_mean + 0.25, label = "Prefer SmBiT 1"),
             size = 4, fontface = "italic") +
   geom_text(aes(x = 4, y = lgB_mean - 0.25, label = "Prefer SmBiT 2"),
             size = 4, fontface = "italic")
 
-ggsave("cyantoyellow.png", ctoy, width = 6, height = 5, units = "in")
+ggsave("cyantoyellow.png", ctoy, width = 6, bg = "transparent", height = 5, units = "in")
