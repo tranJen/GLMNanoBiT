@@ -1,11 +1,11 @@
-## Where to find data?
+## Where to find data and coding scripts?
 #### Navigate each folder with experiment name to find the raw data and coding scripts for plot
 
-  - Emission Spectrum
+  - Emission Spectra
   - Testing permeability through micmic tissue 
   - Generalized Linear Model (GLM), including the model and testing 'hits' 
 
-## The GLM:
+## The GLM
 #### *glm(formula = response_var ~ predictor, data= , family= )*
 #### To analyze the output of model:
   - The coefficient estimate in the output indicate the average change in the log odds of the response variable associated with a one unit increase in each predictor variable. 
