@@ -20,27 +20,41 @@ for_colab_AM <- read_csv("https://raw.githubusercontent.com/tranJen/GLMNanoBiT_H
 #### *AM does not have D147E mutation but RA does.*
 
 ```{r}
-df_AM <-filter(for_colab_AM[2:428,],library!=0)
+#Manipulate McGahan's data
+df_AM <-filter(for_colab_AM[1:428,],library!=0) #remove one has library = 0
+df_AM <- filter(df_AM, B1 != 0 | B2 != 0) #remove one has b1=0 and b2=0
+df_AM[df_AM==0] <- 0.1
 
-df_RA  <-filter(for_colab_RA[2:429,],library!=0)
+df_AM$B1dMut <- (df_AM$B1/ df_AM$B1[1])  / (df_AM$library/ df_AM$library[1])
+df_AM$B2dMut <- (df_AM$B2/ df_AM$B2[1])  / (df_AM$library/ df_AM$library[1])
+df_AM$changeB2_B1 <- df_AM$B2dMut - df_AM$B1dMut
+```
+
+```{r}
+#Manipulate Akrong's data
+for_colab_RA <- read_csv("https://raw.githubusercontent.com/tranJen/GLM_Rabi/main/for_colab_RA.csv")
+df_RA <-filter(for_colab_RA[1:428,],library!=0) #remove one has library = 0
+
 df_RA$B1 <- (df_RA$B1_1 + df_RA$B1_2 )/2
 df_RA$B2 <- (df_RA$B2_1 + df_RA$B2_2 )/2
+
+df_RA <- filter(df_RA, B1 != 0 | B2 != 0) #remove one has b1=0 and b2=0
+df_RA[df_RA==0] <- 0.1
 df_RA <- subset(df_RA, select = -c(B1_1,B1_2, B2_1, B2_2) )
+df_RA$B1dMut <- (df_RA$B1/ df_RA$B1[1])  / (df_RA$library/ df_RA$library[1])
+df_RA$B2dMut <- (df_RA$B2/ df_RA$B2[1])  / (df_AM$library/ df_RA$library[1])
+df_RA$changeB2_B1 <- df_RA$B2dMut - df_RA$B1dMut
 
-df <- rbind(df_RA, df_AM)
-df$pos <- as.character(df$pos)
-df
 ```
+# GLM
 
-# GLM for B1 > B2
+dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
 ```{r}
-df$B1norm <- df$B1 / df$library
-df$B2norm <- df$B2 / df$library
-df$changeB2_B1 <- df$B2norm - df$B1norm
+df <- rbind(df_RA[2:429,], df_AM[2:428, ])
+df<- arrange(df, pos)
+df$pos <- as.character(df$pos)
 ```
-#### *p value is all high with 'binomial' but looks good with 'gaussian'*
 
-## Gaussian
 ```{r}
 gauss_model <- glm( changeB2_B1 ~ pos * mut , data = df, family = 'gaussian') 
 #options(max.print=10000)    #set limit to print the output
@@ -91,7 +105,7 @@ Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1'
 ```
 ### Remove unsignificant 
 ```{r}
-data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 141, 142,146,147,150,151,152,153,154,156,158)), ]
+data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 141, 142,144,146,147,150,151,152,153,154,156,158)), ]
 ```
 
 ```{r}
@@ -100,7 +114,7 @@ heatmap <- ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   geom_text(aes(label = alpha), size = 3) +
   scale_fill_gradient2(midpoint= 0, na.value = 'white', high = 'darkgoldenrod1', low = 'cyan4', mid ='aliceblue') + 
   theme_classic() +
-  theme(text =element_text(size = 10),
+  theme(text =element_text(size = 15),
         # axis.text.x = element_text(angle = 75, hjust = 1), 
         plot.subtitle = element_text(size = 10, color = "red", face = "bold"), 
         aspect.ratio = 3/2,
@@ -111,6 +125,6 @@ heatmap <- ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   theme(legend.key.width = unit(0.25, "cm"))+
   labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1')
 heatmap
-ggsave("heatmap.png", heatmap, width = 6, height = 5, units = "in")
+ggsave("heatmap_WT.png", heatmap, width = 6, height = 5, units = "in")
 ```
 
