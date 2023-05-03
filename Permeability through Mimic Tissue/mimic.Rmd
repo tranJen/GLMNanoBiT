@@ -60,9 +60,9 @@ mimic_bar <- ggplot(long, aes(sample,RLU,fill = Ham)) +
   geom_bar(position = 'dodge', stat = 'summary', fun = "mean") +
   geom_errorbar(stat = 'summary', fun.data = "mean_se", position = position_dodge(width = 0.8), width = 0.5) +
   geom_point(aes(x = sample), size = 2, 
-             position = position_jitterdodge(jitter.width = 0, jitter.height=0.4, dodge.width=0.89))+
+             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0.15, dodge.width=0.89))+
   xlab("Sample") +
-  ylab("log[RLU]") +
+  ylab(expression("log"[10]* "(RLU)")) +
   labs(fill = "Mimic tissue") +
   scale_fill_manual(values = c("darkslategray3", "azure3")) +
   theme_classic() +
