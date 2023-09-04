@@ -14,7 +14,7 @@ library(broom)
 
 
 ```{r}
-data_RAAM_raw <- read_csv("Data_AkrongAndMcGahan.csv")
+data_RAAM_raw <- read_csv("Data_JuliAndEmma.csv")
 
 #have to split for generalization later (correspond WT)
 
