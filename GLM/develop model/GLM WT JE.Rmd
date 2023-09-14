@@ -65,7 +65,7 @@ summary(gauss_model)
  
 
 ```{r}
-fea <- names(coef(gauss_model))[44:length(names(coef(gauss_model)))]      #get features' names
+fea <- names(coef(gauss_model))[45:length(names(coef(gauss_model)))]      #get features' names
 
 #split the features' names (e.g from "pos137:mutA" to "137" and "A")
 mut <- list()
@@ -76,9 +76,10 @@ for (i in fea){
               mut <- append(mut, substr(str_split[[1]][2], 4,4))    # e.g extract A
 }
 
-est <- coef(gauss_model)[-1][43:length(coef(gauss_model)[-1])]          #get estimated contribution 
+
+est <- coef(gauss_model)[-1][44:length(coef(gauss_model)[-1])]          #get estimated contribution 
 #p <- coef(summary(gauss_model))[-1,4]         #get p-value
-p <- tidy(gauss_model)$p.value[44:483]        #to extract all including NA value
+p <- tidy(gauss_model)$p.value[45:483]        #to extract all including NA value
 ```
 
 ##### *white box is NA values. *
