@@ -57,6 +57,7 @@ data_RAAM$pos <- as.character(data_RAAM$pos)
 ```
 
 ```{r}
+### automatically úed pó = 136 as the reference for the regresssion. 
 gauss_model <- glm( changeB2_B1 ~ pos * mut , data = data_RAAM, family = 'gaussian') 
 #options(max.print=10000)    #set limit to print the output
 summary(gauss_model)

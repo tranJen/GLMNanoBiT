@@ -14,51 +14,61 @@ library(broom)
 
 
 ```{r}
-data_RAAM_raw <- read_csv("Data_JuliAndEmma.csv")
+data_JE_raw <- read_csv("Data_JuliAndEmma.csv")
 
 #have to split for generalization later (correspond WT)
 
-RAAM_1 <- data_RAAM_raw %>%
+JE_1 <- data_JE_raw %>%
   select(c(1, 2, 3, 6, 7, 8)) %>%
   filter(library != 0, B1_1 != 0 | B2_1 != 0) %>% #remove rows that has library = 0 OR (b1 = 0 AND b2 = 0)
   mutate_all(~ ifelse(. == 0, 0.1, .)) #change value=0 to 0.1
 
   #GENERALIZE
   #formula: dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
-  RAAM_1$B1_1dMut <- (RAAM_1$B1_1/ RAAM_1$B1_1[1])  / (RAAM_1$library/ RAAM_1$library[1])
-  RAAM_1$B2_1dMut <- (RAAM_1$B2_1/ RAAM_1$B2_1[1])  / (RAAM_1$library/ RAAM_1$library[1])
-  RAAM_1$changeB2_B1 <- RAAM_1$B2_1dMut - RAAM_1$B1_1dMut
+  JE_1$B1_1dMut <- (JE_1$B1_1/ JE_1$B1_1[1])  / (JE_1$library/ JE_1$library[1])
+  JE_1$B2_1dMut <- (JE_1$B2_1/ JE_1$B2_1[1])  / (JE_1$library/ JE_1$library[1])
+  JE_1$changeB2_B1 <- JE_1$B2_1dMut - JE_1$B1_1dMut
 
-RAAM_2 <- data_RAAM_raw %>%
+JE_2 <- data_JE_raw %>%
   select(c(1, 4, 5, 6, 7, 8)) %>%
   filter(library != 0, B1_2 != 0 | B2_2 != 0) %>%
   mutate_all(~ ifelse(. == 0, 0.1, .))
 
   #GENERALIZE
   #formula: dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
-  RAAM_2$B1_2dMut <- (RAAM_2$B1_2/ RAAM_2$B1_2[1])  / (RAAM_2$library/ RAAM_2$library[1])
-  RAAM_2$B2_2dMut <- (RAAM_2$B2_2/ RAAM_2$B2_2[1])  / (RAAM_2$library/ RAAM_2$library[1])
-  RAAM_2$changeB2_B1 <- RAAM_2$B2_2dMut - RAAM_2$B1_2dMut
+  JE_2$B1_2dMut <- (JE_2$B1_2/ JE_2$B1_2[1])  / (JE_2$library/ JE_2$library[1])
+  JE_2$B2_2dMut <- (JE_2$B2_2/ JE_2$B2_2[1])  / (JE_2$library/ JE_2$library[1])
+  JE_2$changeB2_B1 <- JE_2$B2_2dMut - JE_2$B1_2dMut
 ```
 
 ```{r}
 #binding
-data_RAAM <- rbind(
-  select(RAAM_1, 'pos', 'mut', 'changeB2_B1'),
-  select(RAAM_2, 'pos', 'mut', 'changeB2_B1')
+data_JE <- rbind(
+  select(JE_1, 'pos', 'mut', 'changeB2_B1'),
+  select(JE_2, 'pos', 'mut', 'changeB2_B1')
 )
 ```
 # GLM
 
 dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
 ```{r}
-data_RAAM<- arrange(data_RAAM, pos)
-data_RAAM$pos <- as.character(data_RAAM$pos)
+data_JE<- arrange(data_JE, pos)
+data_JE$pos <- as.character(data_JE$pos)
 ```
 
+
 ```{r}
-gauss_model <- glm( changeB2_B1 ~ pos * mut , data = data_RAAM, family = 'gaussian') 
-#options(max.print=10000)    #set limit to print the output
+# Convert pos to a factor with levels including "25"
+data_JE$pos <- as.factor(data_JE$pos)
+levels(data_JE$pos) <-c("25", levels(data_JE$pos)[-which(levels(data_JE$pos) == "25")])
+
+# Set "25" as the reference level
+data_JE$pos <- relevel(data_JE$pos, ref = "25")
+
+# Fit the Gaussian linear regression model
+gauss_model <- glm(changeB2_B1 ~ pos * mut, data = data_JE, family = gaussian)
+options(max.print=10000)    #set limit to print the output
+# Display the summary of the model
 summary(gauss_model)
 
 ```
@@ -91,6 +101,12 @@ data_for_plot$alpha <- ifelse(data_for_plot$p_value<0.001,'***', ifelse(0.001 <d
 ```
 
 ```{r}
+# Define the desired order for Pos as a vector
+desired_order <- c(2:25)  # Modify this as needed
+
+# Convert Pos to a factor with the desired order
+data_for_plot$Pos <- factor(data_for_plot$Pos, levels = desired_order)
+
 #plot estimated contribution vs features
 ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   geom_tile(aes(fill = Est)) + 
@@ -100,30 +116,4 @@ ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
   theme(axis.text.x = element_text(angle = 75, hjust=1), plot.subtitle = element_text(size = 10, color = "red", face = "bold"))+
   labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated
 Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1')
-
 ```
-### Remove unsignificant 
-```{r}
-data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 141, 142,144,146,147,150,151,152,153,154,156,158)), ]
-```
-
-```{r}
-heatmap <- ggplot(data_for_plot, aes(x = Pos, y = Mut)) +
-  geom_tile(aes(fill = Est), width = 1, height = 1) +
-  geom_text(aes(label = alpha), size = 3) +
-  scale_fill_gradient2(midpoint= 0, na.value = 'white', high = 'darkgoldenrod1', low = 'cyan4', mid ='aliceblue') + 
-  theme_classic() +
-  theme(text =element_text(size = 15),
-        # axis.text.x = element_text(angle = 75, hjust = 1), 
-        plot.subtitle = element_text(size = 10, color = "red", face = "bold"), 
-        aspect.ratio = 3/2,
-        # legend.text = element_text(angle = 0, vjust = 1, hjust = 0.5),
-        legend.title = element_text(angle = 90, vjust = 0.5, hjust = 0.5, size = 10),
-        legend.position =  c(1.2,0.5)) +
-  guides(fill = guide_colorbar(title.position = "left", title.hjust = 0.5, label.position = "left"))+
-  theme(legend.key.width = unit(0.25, "cm"))+
-  labs(y = "Mutation Amino Acid", x = "Enzyme Position", fill= 'Estimated Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1')
-heatmap
-ggsave("heatmap_WT.png", heatmap, width = 6, height = 5, units = "in")
-```
-
