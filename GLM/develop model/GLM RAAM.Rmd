@@ -1,5 +1,5 @@
 ---
-title: "GLM for replicate"
+title: "GLM"
 output: html_document
 date: "2023-03-23"
 ---
@@ -20,7 +20,8 @@ data_RAAM_raw <- read_csv("Data_AkrongAndMcGahan.csv")
 
 RAAM_1 <- data_RAAM_raw %>%
   select(c(1, 2, 3, 6, 7, 8)) %>%
-  filter(library != 0, B1_1 != 0 | B2_1 != 0) %>% #remove rows that has library = 0 OR (b1 = 0 AND b2 = 0)
+  filter(library != 0) %>%
+  filter(B1_1 != 0 | B2_1 != 0) %>% #remove rows that has (b1 = 0 AND b2 = 0)
   mutate_all(~ ifelse(. == 0, 0.1, .)) #change value=0 to 0.1
 
   #GENERALIZE
@@ -31,7 +32,8 @@ RAAM_1 <- data_RAAM_raw %>%
 
 RAAM_2 <- data_RAAM_raw %>%
   select(c(1, 4, 5, 6, 7, 8)) %>%
-  filter(library != 0, B1_2 != 0 | B2_2 != 0) %>%
+  filter(library != 0) %>%
+  filter(B1_2 != 0 | B2_2 != 0) %>%
   mutate_all(~ ifelse(. == 0, 0.1, .))
 
   #GENERALIZE
@@ -40,6 +42,7 @@ RAAM_2 <- data_RAAM_raw %>%
   RAAM_2$B2_2dMut <- (RAAM_2$B2_2/ RAAM_2$B2_2[1])  / (RAAM_2$library/ RAAM_2$library[1])
   RAAM_2$changeB2_B1 <- RAAM_2$B2_2dMut - RAAM_2$B1_2dMut
 ```
+
 
 ```{r}
 #binding
@@ -52,21 +55,23 @@ data_RAAM <- rbind(
 
 dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
 ```{r}
-data_RAAM<- arrange(data_RAAM, pos)
-data_RAAM$pos <- as.character(data_RAAM$pos)
+#set NA of pos = -1 to *
+data_RAAM[is.na(data_RAAM)] <- "*"
 ```
 
 ```{r}
-### automatically úed pó = 136 as the reference for the regresssion. 
-gauss_model <- glm( changeB2_B1 ~ pos * mut , data = data_RAAM, family = 'gaussian') 
+### automatically úed pó = 136 as the reference.
+data_RAAM$pos <- as.factor(data_RAAM$pos)
+data_RAAM$pos <- relevel(data_RAAM$pos, ref = "-1")
+gauss_model <- glm(changeB2_B1 ~ pos * mut, data = data_RAAM, family = gaussian())
+
 #options(max.print=10000)    #set limit to print the output
 summary(gauss_model)
 
 ```
- 
 
 ```{r}
-fea <- names(coef(gauss_model))[44:length(names(coef(gauss_model)))]      #get features' names
+fea <- names(coef(gauss_model))[45:length(names(coef(gauss_model)))]      #get features' names
 
 #split the features' names (e.g from "pos137:mutA" to "137" and "A")
 mut <- list()
@@ -77,10 +82,11 @@ for (i in fea){
               mut <- append(mut, substr(str_split[[1]][2], 4,4))    # e.g extract A
 }
 
-est <- coef(gauss_model)[-1][43:length(coef(gauss_model)[-1])]          #get estimated contribution 
+est <- coef(gauss_model)[-1][44:length(coef(gauss_model)[-1])]          #get estimated contribution 
 #p <- coef(summary(gauss_model))[-1,4]         #get p-value
-p <- tidy(gauss_model)$p.value[44:483]        #to extract all including NA value
+p <- tidy(gauss_model)$p.value[45:length(tidy(gauss_model)$p.value)]        #to extract all including NA value
 ```
+
 
 ##### *white box is NA values. *
 
@@ -104,7 +110,7 @@ Contribution', subtitle = 'Signif. codes:  0 *** 0.001 ** 0.01 * 0.05 . 0.1   1'
 ```
 ### Remove unsignificant 
 ```{r}
-data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 141, 142,144,146,147,150,151,152,153,154,156,158)), ]
+data_for_plot <- data_for_plot[!(data_for_plot$Pos %in% c(137, 138, 139, 140, 141, 142,146,147,150,151,152,153,154,156,158)), ]
 ```
 
 ```{r}

@@ -1,5 +1,5 @@
 ---
-title: "GLM for replicate"
+title: "GLM"
 output: html_document
 date: "2023-03-23"
 ---
@@ -51,31 +51,24 @@ data_JE <- rbind(
 # GLM
 
 dMut = (Mut B1/ WT B1) / (Mut lib / WT lib)
-```{r}
-data_JE<- arrange(data_JE, pos)
-data_JE$pos <- as.character(data_JE$pos)
-```
-
 
 ```{r}
-# Convert pos to a factor with levels including "25"
+#set NA of pos = -1 to 0
+data_JE[is.na(data_JE)] <- "*"
+
+# Set "2" as the reference level
 data_JE$pos <- as.factor(data_JE$pos)
-levels(data_JE$pos) <-c("25", levels(data_JE$pos)[-which(levels(data_JE$pos) == "25")])
-
-# Set "25" as the reference level
-data_JE$pos <- relevel(data_JE$pos, ref = "25")
+data_JE$pos <- relevel(data_JE$pos, ref = "-1")
 
 # Fit the Gaussian linear regression model
 gauss_model <- glm(changeB2_B1 ~ pos * mut, data = data_JE, family = gaussian)
-options(max.print=10000)    #set limit to print the output
+#options(max.print=10000)    #set limit to print the output
 # Display the summary of the model
 summary(gauss_model)
-
 ```
- 
 
 ```{r}
-fea <- names(coef(gauss_model))[45:length(names(coef(gauss_model)))]      #get features' names
+fea <- names(coef(gauss_model))[46:length(names(coef(gauss_model)))]      #get features' names
 
 #split the features' names (e.g from "pos137:mutA" to "137" and "A")
 mut <- list()
@@ -87,9 +80,9 @@ for (i in fea){
 }
 
 
-est <- coef(gauss_model)[-1][44:length(coef(gauss_model)[-1])]          #get estimated contribution 
+est <- coef(gauss_model)[-1][45:length(coef(gauss_model)[-1])]          #get estimated contribution 
 #p <- coef(summary(gauss_model))[-1,4]         #get p-value
-p <- tidy(gauss_model)$p.value[45:483]        #to extract all including NA value
+p <- tidy(gauss_model)$p.value[46:length(tidy(gauss_model)$p.value)]        #to extract all including NA value
 ```
 
 ##### *white box is NA values. *
@@ -102,7 +95,7 @@ data_for_plot$alpha <- ifelse(data_for_plot$p_value<0.001,'***', ifelse(0.001 <d
 
 ```{r}
 # Define the desired order for Pos as a vector
-desired_order <- c(2:25)  # Modify this as needed
+desired_order <- c(1:25)  # Modify this as needed
 
 # Convert Pos to a factor with the desired order
 data_for_plot$Pos <- factor(data_for_plot$Pos, levels = desired_order)
